@@ -38,27 +38,15 @@ public class Library {
     }
 
     public Set<String> getUniqueAuthors() {
-        return new HashSet<>(books.stream().map(Book::getAuthor).toList());
+        return books.stream().map(Book::getAuthor).collect(Collectors.toSet());
     }
 
     public Map<String, List<Book>> groupByGenre() {
-        HashMap<String, List<Book>> booksMap = new HashMap<>();
-
-        books.forEach(book -> {
-            if (booksMap.containsKey(book.getGenre())) {
-                booksMap.get(book.getGenre()).add(book);
-            } else {
-                List<Book> booksByGenre = new ArrayList<>();
-                booksByGenre.add(book);
-                booksMap.put(book.getGenre(), booksByGenre);
-            }
-        });
-
-        return booksMap;
+        return books.stream().collect(Collectors.groupingBy(Book::getGenre));
     }
 
     public long countBooksByGenre(String genre) {
-        return this.findByGenre(genre).stream().count();
+        return books.stream().filter(b -> b.getGenre().equals(genre)).count();
     }
 
     public double averagePublicationYear() {
@@ -90,7 +78,7 @@ public class Library {
         if (book == null) {
             return "Книга не найдена";
         }
-        books = books.stream().filter(bk -> !bk.getTitle().equals(title)).toList();
+        books.removeIf(b -> b.getTitle().equals(title));
         booksByAuthors.computeIfPresent(book.getAuthor(),
                 (k, booksByAuthor) -> booksByAuthor.stream().filter(bk -> !bk.getTitle().equals(title)).toList());
 
