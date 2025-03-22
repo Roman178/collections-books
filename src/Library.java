@@ -1,12 +1,28 @@
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 public class Library {
-    List<Book> books = new ArrayList<>();
+    private List<Book> books = new ArrayList<>();
+    private final Map<String, List<Book>> booksByAuthors = new HashMap<>();
 
     public void addBook(Book book) {
         books.add(book);
+        saveBookByAuthor(book);
+    }
+
+    private void saveBookByAuthor(Book book) {
+        List<Book> booksByAuthor = booksByAuthors.get(book.getAuthor());
+        if (booksByAuthor == null) {
+            List<Book> list = new ArrayList<>();
+            list.add(book);
+            booksByAuthors.put(book.getAuthor(), list);
+        } else {
+            booksByAuthor.add(book);
+        }
+    }
+
+    public Map<String, List<Book>> getBooksByAuthors() {
+        return booksByAuthors;
     }
 
     public List<Book> findByAuthor(String author) {
@@ -45,7 +61,39 @@ public class Library {
         return this.findByGenre(genre).stream().count();
     }
 
-//    public double averagePublicationYear() {
-//        books.stream().mapToInt())
-//    }
+    public double averagePublicationYear() {
+        return books.stream().collect(Collectors.averagingInt(Book::getYear));
+    }
+
+    public List<Book> filterByPages(int minPages) {
+        return books.stream().filter(book -> book.getPages() >= minPages).toList();
+    }
+
+    public List<Book> sortByTitle() {
+        return books.stream().sorted(Comparator.comparing(Book::getTitle)).toList();
+    }
+
+    public List<Book> sortByYearDescending() {
+        return books.stream().sorted(Comparator.comparing(Book::getYear).reversed()).toList();
+    }
+
+    public Book searchByTitle(String title) {
+        return books.stream()
+                        .filter(book -> book.getTitle()
+                        .equals(title))
+                        .findFirst()
+                        .orElse(null);
+    }
+
+    public String deleteByTitle(String title) {
+        Book book = books.stream().filter(b -> b.getTitle().equals(title)).findFirst().orElse(null);
+        if (book == null) {
+            return "Книга не найдена";
+        }
+        books = books.stream().filter(bk -> !bk.getTitle().equals(title)).toList();
+        booksByAuthors.computeIfPresent(book.getAuthor(),
+                (k, booksByAuthor) -> booksByAuthor.stream().filter(bk -> !bk.getTitle().equals(title)).toList());
+
+        return "Книга " + title + " удалена";
+    }
 }

@@ -29,4 +29,8 @@ public class Book {
     public int getYear() {
         return year;
     }
+
+    public String getTitle() {
+        return title;
+    }
 }
